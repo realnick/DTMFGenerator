@@ -1,6 +1,8 @@
 #!/usr/bin/env ruby
 require 'wavefile'
 require 'optparse'
+# require 'pry'
+# require 'pry-byebug'
 
 SAMPLE_RATE = 22050 # Hertz
 TONE_LENGTH = SAMPLE_RATE / 2 # Half a second
@@ -50,6 +52,8 @@ def generateDigits(volume)
 	digits.push(generate_tone(852.0, 1209.0, volume)) # 7
 	digits.push(generate_tone(852.0, 1336.0, volume)) # 8
 	digits.push(generate_tone(852.0, 1477.0, volume)) # 9
+	digits.push(generate_tone(941.0, 1209.0, volume)) # *
+	digits.push(generate_tone(941.0, 1477.0, volume)) # #
 	return digits
 end
 
@@ -95,7 +99,17 @@ if __FILE__ == $0
 	end
 
 	file = ARGV.pop
-	sequence = ARGV.pop.split(//).map {|d| d.to_i}
+	sequence = ARGV.pop.split(//).map {|d|
+      if d =~ /^[0-9]$/
+        d.to_i
+      elsif d =~ /^[*]$/
+        10
+      elsif d =~ /^[#]$/
+        11
+      else
+        -1
+      end
+    }
 
 	print "Recording tone "
 	format = WaveFile::Format.new(:mono, :float, SAMPLE_RATE)
@@ -104,7 +118,7 @@ if __FILE__ == $0
 	digits = generateDigits(volume)
 	WaveFile::Writer.new(file, pcm_format) do |writer|
 		for digit in sequence
-			if( digit < 0 or digit > 9 )
+		    if digit < 0
 				next
 			end
 			print "#{digit} "

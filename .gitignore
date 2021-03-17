@@ -1,2 +1,4 @@
 *.wav
 .*.swp
+vendor/
+.bundle/
